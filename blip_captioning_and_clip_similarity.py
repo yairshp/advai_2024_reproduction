@@ -1,10 +1,7 @@
-import json
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 import clip
-import numpy as np
 import pyrallis
 import torch
 from PIL import Image
@@ -13,10 +10,7 @@ from tqdm import tqdm
 
 import pickle
 
-sys.path.append(".")
-sys.path.append("..")
-
-from metrics.imagenet_utils import get_embedding_for_prompt, imagenet_templates
+from imagenet_utils import get_embedding_for_prompt, imagenet_templates
 
 
 @dataclass
@@ -94,28 +88,8 @@ def run(config: EvalConfig):
                 "image_names": image_names,
             }
 
-    # with open("blip_raw_metrics.json", "w") as f:
-    #     json.dump(results_per_prompt, f)
-
-    # aggregate results
-    total_average, total_std = aggregate_text_similarities(results_per_prompt)
-    aggregated_results = {
-        "average_similarity": total_average,
-        "std_similarity": total_std,
-    }
-
-    with open(config.metrics_save_path / "blip_raw_metrics.json", "w") as f:
-        json.dump(results_per_prompt, f, sort_keys=True, indent=4)
-    with open(config.metrics_save_path / "blip_aggregated_metrics.json", "w") as f:
-        json.dump(aggregated_results, f, sort_keys=True, indent=4)
-
-
-def aggregate_text_similarities(result_dict):
-    all_averages = [result_dict[prompt]["text_similarities"] for prompt in result_dict]
-    all_averages = np.array(all_averages).flatten()
-    total_average = np.average(all_averages)
-    total_std = np.std(all_averages)
-    return total_average, total_std
+    with open("text_text_results.pkl", "wb") as f:
+        pickle.dump(results_per_prompt, f)
 
 
 if __name__ == "__main__":

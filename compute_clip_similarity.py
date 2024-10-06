@@ -1,20 +1,15 @@
-import json
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 import clip
-import numpy as np
 import pyrallis
 import torch
 from PIL import Image
 from tqdm import tqdm
+
 import pickle
 
-sys.path.append(".")
-sys.path.append("..")
-
-from metrics.imagenet_utils import get_embedding_for_prompt, imagenet_templates
+from imagenet_utils import get_embedding_for_prompt, imagenet_templates
 
 
 @dataclass
@@ -107,36 +102,8 @@ def run(config: EvalConfig):
                 "image_names": image_names,
             }
 
-    # with open("results_per_prompt.pkl", "wb") as f:
-    #     pickle.dump(results_per_prompt, f)
-
-    # aggregate results
-    aggregated_results = {
-        "full_text_aggregation": aggregate_by_full_text(results_per_prompt),
-        "min_first_second_aggregation": aggregate_by_min_half(results_per_prompt),
-    }
-
-    with open(config.metrics_save_path / "clip_raw_metrics.json", "w") as f:
-        json.dump(results_per_prompt, f, sort_keys=True, indent=4)
-    with open(config.metrics_save_path / "clip_aggregated_metrics.json", "w") as f:
-        json.dump(aggregated_results, f, sort_keys=True, indent=4)
-
-
-def aggregate_by_min_half(d):
-    """Aggregate results for the minimum similarity score for each prompt."""
-    min_per_half_res = [
-        [min(a, b) for a, b in zip(d[prompt]["first_half"], d[prompt]["second_half"])]
-        for prompt in d
-    ]
-    min_per_half_res = np.array(min_per_half_res).flatten()
-    return np.average(min_per_half_res)
-
-
-def aggregate_by_full_text(d):
-    """Aggregate results for the full text similarity for each prompt."""
-    full_text_res = [v["full_text"] for v in d.values()]
-    full_text_res = np.array(full_text_res).flatten()
-    return np.average(full_text_res)
+    with open("image_text_results.pkl", "wb") as f:
+        pickle.dump(results_per_prompt, f)
 
 
 if __name__ == "__main__":
